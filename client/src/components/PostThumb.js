@@ -15,7 +15,7 @@ const PostThumb = ({posts, result}) => {
                         <div className="post_thumb_display">
 
                             {
-                                post.images[0].url.match(/video/i)
+                                post.images[0].url.includes('.mp4') || post.images[0].url.includes('.webm')
                                 ?<video controls src={post.images[0].url} alt={post.images[0].url}
                                 style={{filter: theme ? 'invert(1)' : 'invert(0)'}} /> :
 

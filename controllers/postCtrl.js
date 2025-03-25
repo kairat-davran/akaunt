@@ -187,19 +187,36 @@ const postCtrl = {
     },
     deletePost: async (req, res) => {
         try {
-            const post = await Posts.findOneAndDelete({_id: req.params.id, user: req.user._id})
-            await Comments.deleteMany({_id: {$in: post.comments }})
-
-            res.json({
-                msg: 'Deleted Post!',
-                newPost: {
-                    ...post,
-                    user: req.user
+            const post = await Posts.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    
+            if (!post) {
+                return res.status(404).json({ msg: "Post not found" });
+            }
+    
+            await Comments.deleteMany({ _id: { $in: post.comments } });
+    
+            const db = req.app.locals.db;
+            const gridFSBucket = req.app.locals.gridFSBucket;
+    
+            if (!db || !gridFSBucket) {
+                return res.status(500).json({ msg: "Database or GridFS not initialized" });
+            }
+    
+            if (post.images && post.images.length > 0) {
+                for (const image of post.images) {
+                    const file = await db.collection('uploads.files').findOne({ filename: image.filename });
+    
+                    if (file) {
+                        await gridFSBucket.delete(file._id);
+                    }
                 }
-            })
-
+            }
+    
+            return res.json({ msg: 'Deleted Post!', deletedPost: post });
+    
         } catch (err) {
-            return res.status(500).json({msg: err.message})
+            console.error("Error deleting post:", err.message);
+            return res.status(500).json({ msg: err.message || "Internal Server Error" });
         }
     },
     savePost: async (req, res) => {
