@@ -34,7 +34,7 @@ export const createPost = ({content, images, auth, socket}) => async (dispatch) 
             recipients: res.data.newPost.user.followers,
             url: `/post/${res.data.newPost._id}`,
             content, 
-            image: media[0].url
+            image: media.length > 0 ? media[0].url : null
         }
 
         dispatch(createNotify({msg, auth, socket}))
@@ -163,27 +163,32 @@ export const getPost = ({detailPost, id, auth}) => async (dispatch) => {
 }
 
 export const deletePost = ({post, auth, socket}) => async (dispatch) => {
-    dispatch({ type: POST_TYPES.DELETE_POST, payload: post })
+    dispatch({ type: POST_TYPES.DELETE_POST, payload: post });
 
     try {
-        const res = await deleteDataAPI(`post/${post._id}`, auth.token)
-
-        // Notify
+        const res = await deleteDataAPI(`post/${post._id}`, auth.token);
+    
+        if (!res.data || !res.data.deletedPost) {
+            throw new Error("Invalid response from server");
+        }
+    
         const msg = {
             id: post._id,
-            text: 'added a new post.',
-            recipients: res.data.newPost.user.followers,
+            text: 'deleted a post.',
+            recipients: res.data.deletedPost?.user?.followers || [],
             url: `/post/${post._id}`,
-        }
-        dispatch(removeNotify({msg, auth, socket}))
-        
+        };
+        dispatch(removeNotify({ msg, auth, socket }));
+    
     } catch (err) {
+        console.error("Delete Post Error:", err);
+    
         dispatch({
             type: GLOBALTYPES.ALERT,
-            payload: {error: err.response.data.msg}
-        })
+            payload: { error: err.response?.data?.msg || "Something went wrong" }
+        });
     }
-}
+};
 
 export const savePost = ({post, auth}) => async (dispatch) => {
     const newUser = {...auth.user, saved: [...auth.user.saved, post._id]}

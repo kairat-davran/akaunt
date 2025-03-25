@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const checkImage = (file) => {
     let err = ""
     if(!file) return err = "File does not exist."
@@ -16,22 +18,21 @@ export const imageUpload = async (images) => {
     for(const item of images){
         const formData = new FormData()
 
-        if(item.camera) {
-            formData.append("file", item.camera)
-        } else {
-            formData.append("file", item)
+        formData.append("file", item)
+
+        try {
+            const res = await axios.post("http://localhost:5000/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+
+            imgArr.push({
+                filename: res.data.file.filename,
+                url: `http://localhost:5000/file/${res.data.file.filename}`
+            });
+
+        } catch (error) {
+            console.error("Image upload failed:", error.response?.data || error.message);
         }
-
-        formData.append("upload_preset", "hg5xyvnj")
-        formData.append("cloud_name", "dlcivkraf")
-
-        const res = await fetch("https://api.cloudinary.com/v1_1/dlcivkraf/upload", {
-            method: "POST",
-            body: formData
-        })
-
-        const data = await res.json()
-        imgArr.push({public_id: data.public_id, url: data.secure_url})
     }
     return imgArr
 }

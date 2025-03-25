@@ -68,8 +68,11 @@ const StatusModal = () => {
 
         const ctx = refCanvas.current.getContext('2d')
         ctx.drawImage(videoRef.current, 0, 0, width, height)
-        let URL = refCanvas.current.toDataURL()
-        setImages([...images, {camera: URL}])
+        
+        refCanvas.current.toBlob(blob => {
+            const file = new File([blob], `camera-${Date.now()}.png`, { type: "image/png" });
+            setImages([...images, file]);
+        }, "image/png");
     }
 
     const handleStopStream = () => {
