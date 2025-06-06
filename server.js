@@ -10,12 +10,26 @@ const Grid = require('gridfs-stream');
 const { GridFsStorage } = require('multer-gridfs-storage');
 const path = require('path');
 
+const allowedOrigins = [
+    'http://localhost:3000', // React Web
+    'http://localhost:8081', // Expo Web (Metro bundler)
+    'http://172.20.20.20:8081', // Expo Web (Metro bundler)
+    'http://172.20.10.13:8081', // For mobile access (adjust to your LAN IP)
+    'http://localhost:5000',     // Your local testing or API base
+];
+
 const corsOptions = {
-    origin: 'http://localhost:3000', // or your specific origin
-    credentials: true, // to allow cookies and authentication headers
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.error("CORS blocked origin:", origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-    // you can add more options as needed
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 };
 
 const app = express()
@@ -28,7 +42,14 @@ app.options('*', cors(corsOptions)); // include before other routes
 const http = require('http').createServer(app)
 const io = require('socket.io')(http, {
     cors: {
-        origin: "http://localhost:3000", // Allow frontend origin
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                console.error("Socket.IO CORS blocked origin:", origin);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -48,6 +69,7 @@ app.use('/api', require('./routes/postRouter'))
 app.use('/api', require('./routes/commentRouter'))
 app.use('/api', require('./routes/notifyRouter'))
 app.use('/api', require('./routes/messageRouter'))
+app.use('/api', require('./routes/eventRouter'))
 
 const URI = process.env.MONGODB_URL
 mongoose.connect(URI).then(() => console.log('MongoDB Connected'))

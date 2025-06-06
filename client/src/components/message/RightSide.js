@@ -109,8 +109,10 @@ const RightSide = () => {
             if(message.data.every(item => item._id !== id)){
                 await dispatch(getMessages({auth, id}))
                 setTimeout(() => {
-                    refDisplay.current.scrollIntoView({behavior: 'smooth', block: 'end'})
-                },50)
+                    if (refDisplay.current) {
+                        refDisplay.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                }, 50);
             }
         }
         getMessagesData()

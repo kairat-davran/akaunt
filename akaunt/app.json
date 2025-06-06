@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "akaunt-app",
+    "slug": "akaunt-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to let you upload photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
+        "NSPhotoLibraryAddUsageDescription": "This app saves photos to your library."
+      },
+      "bundleIdentifier": "com.kairatbek-d.akaunt-app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": []
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+    ]
+  }
+}

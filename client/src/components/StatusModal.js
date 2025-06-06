@@ -29,7 +29,7 @@ const StatusModal = () => {
             if(!file) return err = "File does not exist."
 
             if(file.size > 1024 * 1024 * 5){
-                return err = "The image/video largest is 5mb."
+                return err = "The image largest is 5mb."
             }
 
             return newImages.push(file)

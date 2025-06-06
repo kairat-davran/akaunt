@@ -21,6 +21,7 @@ import { getSuggestions } from './redux/actions/suggestionsAction';
 import { getNotifies } from './redux/actions/notifyAction';
 import CallModal from './components/message/CallModal';
 import Peer from 'peerjs'
+import { BASE_URL } from './utils/config';
 
 function App() {
     const auth = useSelector(state => state.auth)
@@ -32,7 +33,7 @@ function App() {
     useEffect(() => {
         dispatch(refreshToken())
 
-        const socket = io('http://localhost:5000');
+        const socket = io(BASE_URL);
         dispatch(setSocket(socket)); // Store the socket instance in Redux
 
         return () => {

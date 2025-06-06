@@ -1,0 +1,44 @@
+{
+  "name": "akaunt",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~5.0.4",
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-community/datetimepicker": "^8.3.0",
+    "@react-native-picker/picker": "^2.11.0",
+    "@react-navigation/bottom-tabs": "^7.3.13",
+    "@react-navigation/native": "^7.1.7",
+    "@react-navigation/native-stack": "^7.3.11",
+    "@reduxjs/toolkit": "^2.7.0",
+    "axios": "^1.9.0",
+    "expo": "~53.0.7",
+    "expo-audio": "^0.4.5",
+    "expo-clipboard": "~7.1.4",
+    "expo-image-picker": "~16.1.4",
+    "expo-sharing": "~13.1.5",
+    "expo-status-bar": "~2.2.3",
+    "moment": "^2.30.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-vector-icons": "^10.2.0",
+    "react-native-web": "^0.20.0",
+    "react-native-webrtc": "^124.0.5",
+    "react-redux": "^9.2.0",
+    "redux": "^5.0.1",
+    "redux-persist": "^6.0.0",
+    "redux-thunk": "^3.1.0",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  },
+  "private": true
+}
