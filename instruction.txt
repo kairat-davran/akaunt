@@ -1,0 +1,73 @@
+<<< HOW TO RUN >>>
+"" Backend ""
+npm install
+npm run dev
+
+"" Client ""
+cd client
+npm install
+npm start
+
+"" Mobile ""
+npm install
+npm run web
+npx expo start -c
+
+
+<<< For Log In >>>
+umut@gmail.com
+123456
+
+kg@gmail.com
+123456
+
+ermek@gmail.com
+123456
+
+
+AKAUNT/
+│
+├── akaunt-app/                  # 📱 React Native + Expo Mobile App (Frontend)
+│   ├── App.js
+│   ├── index.js
+│   ├── assets/
+│   ├── pages/
+│   ├── components/
+│   ├── redux/
+│   ├── SocketClient.js
+│   └── package.json
+│
+├── client/                      # 🌐 Optional Web Frontend (React or static files)
+│   └── 
+│
+├── controllers/                 # ⚙️ Backend Controllers (request handlers)
+│   └── authController.js
+│   └── userController.js
+│   └── postController.js
+│   └── ...
+│
+├── middleware/                  # 🔐 Express Middleware (auth, error handling, etc.)
+│   └── auth.js
+│   └── errorHandler.js
+│
+├── models/                      # 🗃️ Mongoose or Sequelize Models (MongoDB/PostgreSQL)
+│   └── User.js
+│   └── Post.js
+│   └── Notification.js
+│
+├── routes/                      # 🌐 Express Routes
+│   └── authRoutes.js
+│   └── userRoutes.js
+│   └── postRoutes.js
+│
+├── temp/                        # 🧪 Temporary files or test uploads (often ignored)
+│   └── temp.json
+│
+├── .env                         # 🔐 Environment Variables (PORT, DB_URI, JWT_SECRET, etc.)
+├── .gitignore                   # 📁 Git Ignore Config
+├── instruction.txt              # 📝 Development Instructions or Notes
+├── package.json                 # 📦 Backend dependencies
+├── package-lock.json
+├── README.md                    # 📖 Project Overview
+├── server.js                    # 🚀 Express Entry Point (Backend Server)
+├── socketServer.js              # 🔌 Socket.IO server logic

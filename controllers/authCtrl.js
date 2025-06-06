@@ -37,6 +37,7 @@ const authCtrl = {
             res.json({
                 msg: 'Register Success!',
                 access_token,
+                refresh_token, // ✅ Add this line
                 user: {
                     ...newUser._doc,
                     password: ''
@@ -70,6 +71,7 @@ const authCtrl = {
             res.json({
                 msg: 'Login Success!',
                 access_token,
+                refresh_token, // ✅ Add this line
                 user: {
                     ...user._doc,
                     password: ''
@@ -89,7 +91,7 @@ const authCtrl = {
     },
     generateAccessToken: async (req, res) => {
         try {
-            const rf_token = req.cookies.refreshtoken
+            const rf_token = req.cookies?.refreshtoken || req.body?.refresh_token;
             if(!rf_token) return res.status(400).json({msg: "Please login now."})
 
             jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, async(err, result) => {
