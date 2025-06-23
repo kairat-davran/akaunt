@@ -47,7 +47,7 @@ export const updateProfileUser = ({userData, avatar, auth}) => async (dispatch) 
     if(!userData.fullname)
     return dispatch({type: GLOBALTYPES.ALERT, payload: { error: "Please add your full name." }})
 
-    if(userData.fullname.lenght > 25)
+    if(userData.fullname.length > 25)
     return dispatch({type: GLOBALTYPES.ALERT, payload: { error: "Your full name is too long." }})
 
     if(userData.story > 200)
@@ -57,7 +57,7 @@ export const updateProfileUser = ({userData, avatar, auth}) => async (dispatch) 
         let media;
         dispatch({type: GLOBALTYPES.ALERT, payload: {loading: true}})
 
-        if(avatar) media = await imageUpload([avatar])
+        if(avatar) media = await imageUpload([avatar], auth.token)
 
         const res = await patchDataAPI("user", {
             ...userData,

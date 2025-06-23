@@ -6,6 +6,7 @@ import InputComment from './home/InputComment'
 import Comments from './home/Comments'
 
 const PostCard = ({post, theme}) => {
+    
     return (
         <div className="card my-3">
             <CardHeader post={post} />

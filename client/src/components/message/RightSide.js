@@ -10,7 +10,7 @@ import { imageUpload } from '../../utils/imageUpload'
 import { addMessage, getMessages, loadMoreMessages, deleteConversation } from '../../redux/actions/messageAction'
 import LoadIcon from '../../images/loading.gif'
 
-const RightSide = () => {
+const RightSide = ({ setIsLeftOpen }) => {
     const auth = useSelector(state => state.auth)
     const message = useSelector(state => state.message)
     const theme = useSelector(state => state.theme)
@@ -188,6 +188,11 @@ const RightSide = () => {
     return (
         <>
             <div className="message_header" style={{cursor: 'pointer'}} >
+                {window.innerWidth <= 768 && (
+                    <span className="dm-back-btn" onClick={() => navigate('/message')}>
+                        <i className="fas fa-arrow-left mr-1"></i>
+                    </span>
+                )}
                 {
                     user.length !== 0 &&
                     <UserCard user={user}>

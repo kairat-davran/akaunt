@@ -3,45 +3,71 @@ import PostThumb from '../PostThumb'
 import LoadMoreBtn from '../LoadMoreBtn'
 import LoadIcon from '../../images/loading.gif'
 import { getDataAPI } from '../../utils/fetchData'
-import { PROFILE_TYPES } from '../../redux/actions/profileAction'
+import { GLOBALTYPES } from '../../redux/actions/globalTypes'
 
-const Posts = ({auth, profile, dispatch, id}) => {
-    const [posts, setPosts] = useState([])
-    const [result, setResult] = useState(9)
-    const [page, setPage] = useState(0)
-    const [load, setLoad] = useState(false)
+const Posts = ({ auth, id, dispatch }) => {
+  const [posts, setPosts] = useState([])
+  const [result, setResult] = useState(0)
+  const [page, setPage] = useState(1)
+  const [load, setLoad] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true)
 
-    useEffect(() => {
-        profile.posts.forEach(data => {
-            if(data._id === id){
-                setPosts(data.posts)
-                setResult(data.result)
-                setPage(data.page)
-            }
-        })
-    },[profile.posts, id])
+  useEffect(() => {
+    setLoad(true)
+    setInitialLoad(true)
 
-    const handleLoadMore = async () => {
-        setLoad(true)
-        const res = await getDataAPI(`user_posts/${id}?limit=${page * 9}`, auth.token)
-        const newData = {...res.data, page: page + 1, _id: id}
-        dispatch({type: PROFILE_TYPES.UPDATE_POST, payload: newData})
+    getDataAPI(`user_posts/${id}?limit=${page * 9}`, auth.token)
+      .then(res => {
+        setPosts(res.data.posts)
+        setResult(res.data.result)
+        setInitialLoad(false)
         setLoad(false)
+      })
+      .catch(err => {
+        dispatch({
+          type: GLOBALTYPES.ALERT,
+          payload: { error: err.response?.data?.msg || 'Failed to load posts.' }
+        })
+        setInitialLoad(false)
+        setLoad(false)
+      })
+
+    // Do not reset posts here
+  }, [auth.token, id, dispatch, page])
+
+  const handleLoadMore = async () => {
+    const nextPage = page + 1
+    setLoad(true)
+
+    try {
+      const res = await getDataAPI(`user_posts/${id}?limit=${nextPage * 9}`, auth.token)
+      setPosts(res.data.posts)
+      setResult(res.data.result)
+      setPage(nextPage)
+    } catch (err) {
+      dispatch({
+        type: GLOBALTYPES.ALERT,
+        payload: { error: err.response?.data?.msg || 'Failed to load more posts.' }
+      })
     }
 
-    return (
-        <>
-            <PostThumb posts={posts} result={result} />
+    setLoad(false)
+  }
 
-            {
-                load && <img src={LoadIcon} alt="loading" className="d-block mx-auto" />
-            }
+  return (
+    <>
+      <PostThumb posts={posts} result={result} initialLoad={initialLoad} />
 
-            
-            <LoadMoreBtn result={result} page={page}
-            load={load} handleLoadMore={handleLoadMore} />
-        </>
-    )
+      {load && <img src={LoadIcon} alt="loading" className="d-block mx-auto" />}
+
+      <LoadMoreBtn
+        result={result}
+        page={page}
+        load={load}
+        handleLoadMore={handleLoadMore}
+      />
+    </>
+  )
 }
 
 export default Posts

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { GLOBALTYPES } from '../redux/actions/globalTypes'
 import { createPost, updatePost } from '../redux/actions/postAction'
+import imageCompression from 'browser-image-compression'
 import Icons from './Icons'
 import { imageShow, videoShow } from '../utils/mediaShow'
 
@@ -20,24 +21,35 @@ const StatusModal = () => {
     const refCanvas = useRef()
     const [tracks, setTracks] = useState('')
 
-    const handleChangeImages = e => {
-        const files = [...e.target.files]
-        let err = ""
-        let newImages = []
+    const handleChangeImages = async (e) => {
+        const files = [...e.target.files];
+        let newImages = [];
 
-        files.forEach(file => {
-            if(!file) return err = "File does not exist."
-
-            if(file.size > 1024 * 1024 * 5){
-                return err = "The image largest is 5mb."
+        for (const file of files) {
+            if (!file) {
+                dispatch({ type: GLOBALTYPES.ALERT, payload: { error: "File does not exist." } });
+                continue;
             }
 
-            return newImages.push(file)
-        })
+            try {
+                const compressedFile = await imageCompression(file, {
+                    maxSizeMB: 1,               // 🔧 compress all images to ≤1MB
+                    maxWidthOrHeight: 1920,     // resize large dimensions
+                    useWebWorker: true
+                });
 
-        if(err) dispatch({ type: GLOBALTYPES.ALERT, payload: {error: err} })
-        setImages([...images, ...newImages])
-    }
+                newImages.push(compressedFile);
+            } catch (err) {
+                console.error("Image compression error:", err);
+                dispatch({
+                    type: GLOBALTYPES.ALERT,
+                    payload: { error: "Image compression failed." }
+                });
+            }
+        }
+
+        setImages(prev => [...prev, ...newImages]);
+    };
 
     const deleteImages = (index) => {
         const newArr = [...images]
@@ -68,11 +80,8 @@ const StatusModal = () => {
 
         const ctx = refCanvas.current.getContext('2d')
         ctx.drawImage(videoRef.current, 0, 0, width, height)
-        
-        refCanvas.current.toBlob(blob => {
-            const file = new File([blob], `camera-${Date.now()}.png`, { type: "image/png" });
-            setImages([...images, file]);
-        }, "image/png");
+        let URL = refCanvas.current.toDataURL()
+        setImages([...images, {camera: URL}])
     }
 
     const handleStopStream = () => {

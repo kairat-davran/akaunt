@@ -10,6 +10,8 @@
 .message_header{
     width: 100%;
     height: 60px;
+    padding: 0 10px;
+    gap: 10px;
     border-bottom: 1px solid #ddd;
     display: flex;
     justify-content: space-between;
@@ -196,4 +198,43 @@
 }
 .chat_input .dropdown-menu{
     transform: translate3d(-110px, -200px, 0px) !important;
+}
+
+/* --------- Mobile Optimization --------- */
+@media screen and (max-width: 768px) {
+  .message {
+    flex-direction: column;
+    height: 100vh;
+    margin-top: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  .message .left_mess {
+    display: none;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .message .right_mess {
+    width: 100%;
+    height: 100%;
+  }
+
+  .message.open-left .left_mess {
+    display: block;
+  }
+
+  .message.open-left .right_mess {
+    display: none;
+  }
+
+  .chat_input input {
+    font-size: 16px;
+  }
+
+  .message_user {
+    font-size: 16px;
+  }
 }
