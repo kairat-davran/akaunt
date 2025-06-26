@@ -110,7 +110,7 @@ const MessageScreen = () => {
             onPress={() => handleAddUser(item)}
             style={styles.userItem}
           >
-            <UserCard user={item} msg={true} />
+            <UserCard user={item} msg={true} disablePress={true} />
             {item.online ||
             auth.user.following.find(f => f._id === item._id) ? (
               <Text style={[styles.onlineIndicator, { color: 'green' }]}>●</Text>
@@ -145,7 +145,7 @@ const MessageScreen = () => {
               style={styles.modalCloseBtn}
               onPress={() => setShowSearchModal(false)}
             >
-              <Text style={styles.modalCloseText}>×</Text>
+              <Text style={styles.modalCloseText}>x</Text>
             </TouchableOpacity>
           </View>
         </View>

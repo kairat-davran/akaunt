@@ -9,7 +9,8 @@ import {
   Modal,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import Info from '../../components/profile/Info';
 import Posts from '../../components/profile/Posts';
@@ -22,11 +23,14 @@ import { getProfileUsers } from '../../redux/actions/profileAction';
 
 const ProfileScreen = () => {
   const { params } = useRoute();
+  const navigation = useNavigation();
   const { userId: id } = params;
 
   const profile = useSelector(state => state.profile);
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
+
+  const isSelf = id === auth.user._id;
 
   const [saveTab, setSaveTab] = useState(false);
   const [onEdit, setOnEdit] = useState(false);
@@ -35,7 +39,7 @@ const ProfileScreen = () => {
   const [userData, setUserData] = useState({});
 
   useEffect(() => {
-    if (id === auth.user._id) {
+    if (isSelf) {
       setUserData(auth.user);
     } else {
       const newData = profile.users.find(user => user._id === id);
@@ -51,6 +55,28 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView style={styles.profile}>
+      <View style={styles.header}>
+        {!isSelf && (
+          <TouchableOpacity
+            style={styles.backIcon}
+            onPress={() => navigation.goBack()}
+          >
+            <MaterialIcons name="arrow-back" size={26} color="#333" />
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.username}>{userData.username || 'Profile'}</Text>
+
+        {isSelf && (
+          <TouchableOpacity
+            style={styles.settingsIcon}
+            onPress={() => setOnEdit(true)}
+          >
+            <MaterialIcons name="settings" size={26} color="#333" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <View style={styles.info}>
         <Info
           auth={auth}
@@ -66,7 +92,7 @@ const ProfileScreen = () => {
         />
       </View>
 
-      {auth.user._id === id && (
+      {isSelf && (
         <View style={styles.profile_tab}>
           <TouchableOpacity
             style={[styles.tabButton, !saveTab && styles.activeTab]}
@@ -88,7 +114,7 @@ const ProfileScreen = () => {
           source={require('../../assets/images/loading.gif')}
           style={styles.loading}
         />
-      ) : saveTab ? (
+      ) : saveTab && isSelf ? (
         <Saved auth={auth} dispatch={dispatch} />
       ) : (
         <Posts auth={auth} profile={profile} dispatch={dispatch} id={id} />
@@ -101,6 +127,7 @@ const ProfileScreen = () => {
           </View>
         </View>
       </Modal>
+
       <Modal visible={showFollowers} animationType="fade" transparent>
         <Followers users={userData.followers} setShowFollowers={setShowFollowers} />
       </Modal>
@@ -108,7 +135,6 @@ const ProfileScreen = () => {
       <Modal visible={showFollowing} animationType="fade" transparent>
         <Following users={userData.following} setShowFollowing={setShowFollowing} />
       </Modal>
-
     </ScrollView>
   );
 };
@@ -120,6 +146,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fdfdfd',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    position: 'relative',
+    elevation: 2,
+  },
+  username: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  backIcon: {
+    position: 'absolute',
+    left: 16,
+    top: 16,
+  },
+  settingsIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+  },
   info: {
     paddingHorizontal: 16,
     paddingTop: 24,
@@ -127,9 +180,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    // Updated shadow (use elevation for Android)
     elevation: 3,
-    boxShadow: '0px 2px 6px rgba(0,0,0,0.05)', // For iOS with new RN
+    boxShadow: '0px 2px 6px rgba(0,0,0,0.05)',
   },
   profile_tab: {
     flexDirection: 'row',
@@ -171,6 +223,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     elevation: 8,
-    boxShadow: '0px 4px 10px rgba(0,0,0,0.1)', // modern boxShadow
+    boxShadow: '0px 4px 10px rgba(0,0,0,0.1)',
   },
 });

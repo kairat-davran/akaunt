@@ -6,14 +6,21 @@ const notifyCtrl = {
         try {
             const { id, recipients, url, text, content, image } = req.body
 
-            if(recipients.includes(req.user._id.toString())) return;
+            if (!Array.isArray(recipients)) {
+                return res.status(400).json({ msg: 'Recipients must be an array' });
+            }
+
+            // Don't notify self
+            if (recipients.includes(req.user._id.toString())) {
+                return res.status(204).end();
+            }
 
             const notify = new Notifies({
                 id, recipients, url, text, content, image, user: req.user._id
             })
 
-            await notify.save()
-            return res.json({notify})
+            await notify.save();
+            return res.status(201).json({ notify });
         } catch (err) {
             return res.status(500).json({msg: err.message})
         }

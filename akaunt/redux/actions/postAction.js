@@ -16,13 +16,13 @@ export const createPost = ({ content, images, auth, socket }) => async (dispatch
   try {
     dispatch({ type: GLOBALTYPES.ALERT, payload: { loading: true } });
 
-    // const uploadPromises = images.map(asset => uploadMediaToServer(asset));
     const uploadPromises = images.map(img =>
-      img?.file ? uploadMediaToServer(img.file) :
-      img?.uri ? uploadMediaToServer(img.uri) :
+      img?.file ? uploadMediaToServer([img.file], auth.token) :
+      img?.uri ? uploadMediaToServer([img.uri], auth.token) :
       null
     );
-    const media = (await Promise.all(uploadPromises)).filter(Boolean);
+    
+    const media = (await Promise.all(uploadPromises)).flat().filter(Boolean);
 
     const res = await postDataAPI('posts', {
       content,
@@ -40,10 +40,13 @@ export const createPost = ({ content, images, auth, socket }) => async (dispatch
     const msg = {
       id: res.data.newPost._id,
       text: 'added a new post.',
-      recipients: res.data.newPost.user.followers,
+      recipients: Array.isArray(res.data.newPost.user?.followers) ? res.data.newPost.user.followers : [],
       url: `/post/${res.data.newPost._id}`,
       content,
-      image: media.length > 0 ? media[0] : null // ✅ media is string array now
+      image:
+        typeof media[0] === 'string'
+          ? media[0]
+          : media[0]?.url || media[0]?.uri || null
     };
 
     dispatch(createNotify({ msg, auth, socket }));
@@ -94,13 +97,13 @@ export const updatePost = ({ content, images, auth, status, socket }) => async (
     dispatch({ type: GLOBALTYPES.ALERT, payload: { loading: true } });
 
     if (imgNew.length > 0) {
-      media = await Promise.all(
+      media = (await Promise.all(
         imgNew.map(img =>
-          img?.file ? uploadMediaToServer(img.file) :
-          img?.uri ? uploadMediaToServer(img.uri) :
+          img?.file ? uploadMediaToServer([img.file], auth.token) :
+          img?.uri ? uploadMediaToServer([img.uri], auth.token) :
           null
         )
-      );
+      )).flat().filter(Boolean);
     }
 
     const updatedImages = [...imgOld, ...media.filter(Boolean)];
@@ -114,14 +117,17 @@ export const updatePost = ({ content, images, auth, status, socket }) => async (
     dispatch({ type: POST_TYPES.UPDATE_POST, payload: res.data.newPost });
     dispatch({ type: GLOBALTYPES.ALERT, payload: { success: res.data.msg } });
 
-    // ✅ Notify followers
+    // ✅ Safe Notify
     const msg = {
       id: res.data.newPost._id,
       text: 'updated a post.',
-      recipients: status.user?.followers || [],
+      recipients: Array.isArray(status.user?.followers) ? status.user.followers : [],
       url: `/post/${status._id}`,
       content: content || '',
-      image: updatedImages?.[0]?.url || updatedImages?.[0]?.uri || null
+      image:
+        typeof updatedImages[0] === 'string'
+          ? updatedImages[0]
+          : updatedImages[0]?.url || updatedImages[0]?.uri || null
     };
 
     dispatch(createNotify({ msg, auth, socket }));

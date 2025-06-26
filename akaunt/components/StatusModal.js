@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Image, ScrollView,
+  StyleSheet, Image, ScrollView, Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -32,21 +32,37 @@ const StatusModal = () => {
   };
 
   const handlePickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permission.status !== 'granted') {
-      alert('Permission denied.');
-      return;
-    }
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.onchange = (e) => {
+        const files = Array.from(e.target.files);
+        const newImages = files.map(file => ({
+          uri: URL.createObjectURL(file),
+          file
+        }));
+        setImages(prev => [...prev, ...newImages]);
+      };
+      input.click();
+    } else {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== 'granted') {
+        alert('Permission denied.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      base64: false,
-      quality: 1,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        base64: false,
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setImages(prev => [...prev, ...result.assets]);
+      if (!result.canceled) {
+        setImages(prev => [...prev, ...result.assets]);
+      }
     }
   };
 

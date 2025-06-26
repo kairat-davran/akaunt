@@ -1,24 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  Alert,
-  Share,
-  ScrollView,
-  SafeAreaView,
-  Modal,
-  TextInput,
-  Platform,
+  View, Text, FlatList, Image, TouchableOpacity, Alert,
+  Share, ScrollView, SafeAreaView, Modal, TextInput,
+  Platform, StyleSheet
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
-import { getEvents, createEvent, updateEvent, deleteEvent } from '../../redux/actions/eventAction';
+import {
+  getEvents, createEvent, updateEvent, deleteEvent
+} from '../../redux/actions/eventAction';
 import EventCard from '../../components/event/EventCard';
 
 const categories = ['All', 'Tech', 'Startup', 'Conference'];
@@ -27,22 +19,24 @@ const EventScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { events } = useSelector(state => state.events);
   const auth = useSelector(state => state.auth);
+
   const [rsvpList, setRsvpList] = useState([]);
   const [filter, setFilter] = useState('All');
   const [modalVisible, setModalVisible] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+
   const [form, setForm] = useState({
     id: '',
     title: '',
     location: '',
     datetime: new Date(),
     category: '',
-    image: null,
+    images: [],
   });
 
   useEffect(() => {
     dispatch(getEvents(auth.token));
-  }, [dispatch, auth.token]);
+  }, []);
 
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -55,30 +49,24 @@ const EventScreen = ({ navigation }) => {
       quality: 1,
     });
     if (!result.canceled) {
-      setForm((prev) => ({ ...prev, image: result.assets[0] }));
+      const selected = result.assets[0];
+      setForm(prev => ({
+        ...prev,
+        images: [...(prev.images || []), selected]
+      }));
     }
   };
 
   const handleWebImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const uri = URL.createObjectURL(file);
-      setForm((prev) => ({ ...prev, image: { uri, file } }));
-    }
-  };
+      const previewUrl = URL.createObjectURL(file);
+      const fileWithPreview = { file: [file], uri: previewUrl };
 
-  const handleRSVP = (id) => {
-    setRsvpList((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    Alert.alert('RSVP Confirmed', 'You are attending this event.');
-  };
-
-  const handleShare = async (event) => {
-    try {
-      await Share.share({
-        message: `Join me at "${event.title}" on ${new Date(event.date).toLocaleString()} in ${event.location}!`,
-      });
-    } catch {
-      Alert.alert('Error', 'Failed to share the event.');
+      setForm(prev => ({
+        ...prev,
+        images: [fileWithPreview]
+      }));
     }
   };
 
@@ -91,12 +79,10 @@ const EventScreen = ({ navigation }) => {
     const payload = {
       ...form,
       date: form.datetime,
-      images: form.image ? [form.image] : [],
     };
-    delete payload.datetime;
 
     if (form.id) {
-      dispatch(updateEvent({ id: form.id, data: payload, auth }));
+      dispatch(updateEvent({ data: payload, auth }));
     } else {
       dispatch(createEvent({ data: payload, auth }));
     }
@@ -112,35 +98,17 @@ const EventScreen = ({ navigation }) => {
       location: event.location,
       datetime: new Date(event.date),
       category: event.category,
-      image: event.images?.[0]
-        ? {
-            ...event.images[0],
-            uri: event.images[0].uri || event.images[0].url || '',
-          }
-        : null,
+      images: event.images || [],
     });
     setModalVisible(true);
   };
 
   const handleDelete = (event) => {
-    if (Platform.OS === 'web') {
-      const confirm = window.confirm(`Are you sure you want to delete "${event.title}"?`);
-      if (confirm) {
-        dispatch(deleteEvent({ id: event._id, auth }));
-      }
-    } else {
-      Alert.alert(
-        'Delete Event',
-        `Are you sure you want to delete "${event.title}"?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => dispatch(deleteEvent({ id: event._id, auth })),
-          },
-        ]
-      );
+    const confirm = Platform.OS === 'web'
+      ? window.confirm(`Delete "${event.title}"?`)
+      : true;
+    if (confirm) {
+      dispatch(deleteEvent({ id: event._id, auth }));
     }
   };
 
@@ -151,19 +119,18 @@ const EventScreen = ({ navigation }) => {
       location: '',
       datetime: new Date(),
       category: '',
-      image: null,
+      images: [],
     });
   };
 
-  const filteredEvents = filter === 'All' ? events : events.filter(e => e.category === filter);
+  const filteredEvents = filter === 'All'
+    ? events
+    : events.filter(e => e.category === filter);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerBar}>
-        <View style={styles.headerContent}>
-          <Text style={styles.heading}>🎉 Upcoming Events</Text>
-          <Text style={styles.subheading}>Browse, RSVP, and share events in your community</Text>
-        </View>
+        <Text style={styles.heading}>🎉 Upcoming Events</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar}>
           {categories.map((cat) => (
             <TouchableOpacity
@@ -179,28 +146,32 @@ const EventScreen = ({ navigation }) => {
 
       <FlatList
         data={filteredEvents}
-        keyExtractor={(item) => item._id}
+        keyExtractor={item => item._id}
         renderItem={({ item }) => (
           <EventCard
             item={item}
             isRSVPed={rsvpList.includes(item._id)}
-            onRSVP={handleRSVP}
-            onShare={handleShare}
-            onEdit={openEditForm}
-            onDelete={handleDelete}
+            onRSVP={() => {
+              setRsvpList(prev => [...prev, item._id]);
+              Alert.alert('RSVP Confirmed', 'You are attending.');
+            }}
+            onShare={() => {
+              Share.share({
+                message: `Join me at "${item.title}" on ${new Date(item.date).toLocaleString()} in ${item.location}!`
+              });
+            }}
+            onEdit={() => openEditForm(item)}
+            onDelete={() => handleDelete(item)}
             navigation={navigation}
           />
         )}
         contentContainerStyle={styles.list}
       />
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => {
-          resetForm();
-          setModalVisible(true);
-        }}
-      >
+      <TouchableOpacity style={styles.fab} onPress={() => {
+        resetForm();
+        setModalVisible(true);
+      }}>
         <MaterialIcons name="add" size={30} color="#fff" />
       </TouchableOpacity>
 
@@ -208,13 +179,13 @@ const EventScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{form.id ? 'Edit Event' : 'Create Event'}</Text>
-            {['title', 'location', 'category'].map((field) => (
+            {['title', 'location', 'category'].map(field => (
               <TextInput
                 key={field}
                 placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                 style={styles.input}
                 value={form[field]}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, [field]: text }))}
+                onChangeText={text => setForm(prev => ({ ...prev, [field]: text }))}
               />
             ))}
 
@@ -223,11 +194,13 @@ const EventScreen = ({ navigation }) => {
                 type="datetime-local"
                 value={form.datetime.toISOString().slice(0, 16)}
                 onChange={(e) => setForm(prev => ({ ...prev, datetime: new Date(e.target.value) }))}
-                style={{ marginBottom: 10, padding: 8, borderRadius: 6, border: '1px solid #ccc', fontSize: 14, width: '100%' }}
               />
             ) : (
               <>
-                <TouchableOpacity onPress={() => setShowPicker(true)} style={[styles.input, { justifyContent: 'center' }]}>
+                <TouchableOpacity
+                  onPress={() => setShowPicker(true)}
+                  style={[styles.input, { justifyContent: 'center' }]}
+                >
                   <Text>{form.datetime.toLocaleString()}</Text>
                 </TouchableOpacity>
                 {showPicker && (
@@ -237,7 +210,9 @@ const EventScreen = ({ navigation }) => {
                     display="default"
                     onChange={(event, selectedDate) => {
                       setShowPicker(false);
-                      if (selectedDate) setForm(prev => ({ ...prev, datetime: selectedDate }));
+                      if (selectedDate) {
+                        setForm(prev => ({ ...prev, datetime: selectedDate }));
+                      }
                     }}
                   />
                 )}
@@ -245,35 +220,21 @@ const EventScreen = ({ navigation }) => {
             )}
 
             {Platform.OS === 'web' ? (
-              <input type="file" accept="image/*" onChange={handleWebImageUpload} style={{ marginVertical: 10 }} />
+              <input type="file" accept="image/*" onChange={handleWebImageUpload} />
             ) : (
               <TouchableOpacity onPress={handlePickImage} style={styles.saveBtn}>
-                <Text style={styles.saveBtnText}>{form.image ? 'Change Image' : 'Pick Image'}</Text>
+                <Text style={styles.saveBtnText}>Pick Image</Text>
               </TouchableOpacity>
             )}
-            {form.image?.uri && (
-              <View style={{ position: 'relative', marginVertical: 10 }}>
+
+            {form.images?.map((img, idx) => (
+              <View key={idx} style={{ marginVertical: 5 }}>
                 <Image
-                  source={{ uri: form.image.uri }}
-                  style={{ width: '100%', height: 150, borderRadius: 8 }}
+                  source={{ uri: img.uri || img.url }}
+                  style={{ width: '100%', height: 120, borderRadius: 8 }}
                 />
-                <TouchableOpacity
-                  onPress={() => setForm(prev => ({ ...prev, image: null }))}
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    backgroundColor: 'crimson',
-                    borderRadius: 12,
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    zIndex: 10,
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>×</Text>
-                </TouchableOpacity>
               </View>
-            )}
+            ))}
 
             <TouchableOpacity style={styles.saveBtn} onPress={handleCreateOrUpdate}>
               <Text style={styles.saveBtnText}>Save</Text>

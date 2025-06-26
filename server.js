@@ -8,11 +8,19 @@ const { ExpressPeerServer } = require('peer')
 const path = require('path');
 
 const allowedOrigins = [
+    // Origins for development and testing
     'http://localhost:3000', // React Web
     'http://localhost:8081', // Expo Web (Metro bundler)
+    'http://localhost:5000', // Your local testing or API base
+
+    // Home Network IPs for mobile access
     'http://172.20.20.20:8081', // Expo Web (Metro bundler)
-    'http://172.20.10.13:8081', // For mobile access (adjust to your LAN IP)
-    'http://localhost:5000',     // Your local testing or API base
+
+    // SPO Network IPs for mobile access
+    'http://10.20.10.13:8081', // For mobile access (adjust to your LAN IP)
+
+    // SPO Network IPs for mobile access
+    'http://10.3.0.218:8081', // For mobile access (adjust to your LAN IP)
 ];
 
 const corsOptions = {

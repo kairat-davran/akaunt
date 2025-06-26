@@ -4,7 +4,16 @@ import Avatar from './Avatar';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 
-const UserCard = ({ children, user, border, handleClose, setShowFollowers, setShowFollowing, msg }) => {
+const UserCard = ({
+  children,
+  user,
+  border,
+  handleClose,
+  setShowFollowers,
+  setShowFollowing,
+  msg,
+  disablePress = false
+}) => {
   const theme = useSelector(state => state.theme);
   const navigation = useNavigation();
 
@@ -23,11 +32,9 @@ const UserCard = ({ children, user, border, handleClose, setShowFollowers, setSh
     return (
       <View style={{ filter: theme ? 'invert(1)' : 'invert(0)' }}>
         <Text>{user.text || ''}</Text>
-
         {Array.isArray(user.media) && user.media.length > 0 && (
           <Text>{user.media.length} 🖼</Text>
         )}
-
         {user.call && (
           <Text>
             {user.call.times === 0
@@ -41,16 +48,27 @@ const UserCard = ({ children, user, border, handleClose, setShowFollowers, setSh
 
   return (
     <View style={[styles.row, border && styles.border]}>
-      <TouchableOpacity style={styles.info} onPress={handleNavigate}>
-        <Avatar src={user.avatar} size="big-avatar" />
-
-        <View style={{ marginLeft: 10 }}>
-          <Text>{user.username}</Text>
-          <Text style={{ opacity: 0.7 }}>
-            {msg ? showMsg(user) : user.fullname}
-          </Text>
+      {!disablePress ? (
+        <TouchableOpacity style={styles.info} onPress={handleNavigate}>
+          <Avatar src={user.avatar} size="big-avatar" />
+          <View style={{ marginLeft: 10 }}>
+            <Text>{user.username}</Text>
+            <Text style={{ opacity: 0.7 }}>
+              {msg ? showMsg(user) : user.fullname}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.info, { pointerEvents: 'none' }]}>
+          <Avatar src={user.avatar} size="big-avatar" />
+          <View style={{ marginLeft: 10 }}>
+            <Text>{user.username}</Text>
+            <Text style={{ opacity: 0.7 }}>
+              {msg ? showMsg(user) : user.fullname}
+            </Text>
+          </View>
         </View>
-      </TouchableOpacity>
+      )}
 
       {children}
     </View>
