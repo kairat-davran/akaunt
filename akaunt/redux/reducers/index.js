@@ -15,6 +15,7 @@ import message from "./messageReducer"
 import online from "./onlineReducer"
 import call from "./callReducer"
 import events from "./eventReducer"
+import bazar from './bazarReducer';
 
 export default combineReducers({
     auth,
@@ -29,6 +30,7 @@ export default combineReducers({
     suggestions,
     notify,
     events,
+    bazar,
     communication: communicationReducer,
     message,
     online,

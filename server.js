@@ -17,9 +17,6 @@ const allowedOrigins = [
     'http://172.20.20.20:8081', // Expo Web (Metro bundler)
 
     // SPO Network IPs for mobile access
-    'http://10.20.10.13:8081', // For mobile access (adjust to your LAN IP)
-
-    // SPO Network IPs for mobile access
     'http://10.3.0.218:8081', // For mobile access (adjust to your LAN IP)
 ];
 
@@ -68,13 +65,14 @@ io.on('connection', socket => {
 ExpressPeerServer(http, { path: '/' })
 
 // Routes
-app.use('/api', require('./routes/authRouter'))
-app.use('/api', require('./routes/userRouter'))
-app.use('/api', require('./routes/postRouter'))
-app.use('/api', require('./routes/commentRouter'))
-app.use('/api', require('./routes/notifyRouter'))
-app.use('/api', require('./routes/messageRouter'))
-app.use('/api', require('./routes/eventRouter'))
+app.use('/api', require('./routes/authRouter'));
+app.use('/api', require('./routes/userRouter'));
+app.use('/api', require('./routes/postRouter'));
+app.use('/api', require('./routes/commentRouter'));
+app.use('/api', require('./routes/notifyRouter'));
+app.use('/api', require('./routes/messageRouter'));
+app.use('/api', require('./routes/eventRouter'));
+app.use('/api', require('./routes/bazarRouter'));
 app.use('/api', require('./routes/uploadRouter'));
 
 const URI = process.env.MONGODB_URL

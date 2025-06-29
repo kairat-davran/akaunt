@@ -56,24 +56,21 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={styles.profile}>
       <View style={styles.header}>
-        {!isSelf && (
-          <TouchableOpacity
-            style={styles.backIcon}
-            onPress={() => navigation.goBack()}
-          >
-            <MaterialIcons name="arrow-back" size={26} color="#333" />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={isSelf ? styles.settingsIcon : styles.backIcon}
+          onPress={() => {
+            isSelf ? setOnEdit(true) : navigation.goBack();
+          }}
+        >
+          <MaterialIcons
+            name={isSelf ? 'settings' : 'arrow-back'}
+            size={26}
+            color="#333"
+          />
+        </TouchableOpacity>
 
-        <Text style={styles.username}>{userData.username || 'Profile'}</Text>
-
-        {isSelf && (
-          <TouchableOpacity
-            style={styles.settingsIcon}
-            onPress={() => setOnEdit(true)}
-          >
-            <MaterialIcons name="settings" size={26} color="#333" />
-          </TouchableOpacity>
+        {userData.username && (
+          <Text style={styles.username}>{userData.username}</Text>
         )}
       </View>
 
@@ -158,6 +155,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     position: 'relative',
     elevation: 2,
+    minHeight: 56,
   },
   username: {
     fontSize: 18,

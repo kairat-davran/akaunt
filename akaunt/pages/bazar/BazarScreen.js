@@ -9,69 +9,31 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
-  Platform
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
-
-const mockItems = [
-  {
-    id: '1',
-    title: 'iPhone 14 Pro',
-    price: '$900',
-    location: 'Seattle, WA',
-    description: 'Like new iPhone 14 Pro, 128GB, great condition.',
-    image: 'https://source.unsplash.com/400x400/?iphone,tech',
-    seller: {
-      id: 'a1',
-      name: 'Alice',
-      avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-    },
-    category: 'Electronics',
-  },
-  {
-    id: '2',
-    title: 'Mountain Bike',
-    price: '$250',
-    location: 'Portland, OR',
-    description: '26-inch mountain bike with Shimano gears.',
-    image: 'https://source.unsplash.com/400x400/?bike',
-    seller: {
-      id: 'b2',
-      name: 'Bob',
-      avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-    },
-    category: 'Vehicles',
-  },
-  {
-    id: '3',
-    title: 'Gaming Laptop',
-    price: '$1200',
-    location: 'San Jose, CA',
-    description: 'Powerful gaming laptop with RTX graphics.',
-    image: 'https://source.unsplash.com/400x400/?laptop,gaming',
-    seller: {
-      id: 'c3',
-      name: 'Charlie',
-      avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-    },
-    category: 'Electronics',
-  },
-];
+import { useSelector, useDispatch } from 'react-redux';
+import { getItems } from '../../redux/actions/bazarAction';
+import { GLOBALTYPES } from '../../redux/actions/globalTypes';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const categories = ['All', 'Electronics', 'Vehicles'];
 
 const BazarScreen = () => {
-  const [items, setItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const navigation = useNavigation();
   const auth = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+
+  const { items } = useSelector(state => state.bazar);
 
   useEffect(() => {
-    setItems(mockItems);
-  }, []);
+    if (auth.token) {
+      dispatch(getItems(auth.token));
+    }
+  }, [auth.token]);
 
   const filteredItems = items.filter(item => {
     const matchesCategory =
@@ -85,38 +47,33 @@ const BazarScreen = () => {
       style={styles.item}
       onPress={() => navigation.navigate('BazarItemDetail', { item })}
     >
-      <Image source={{ uri: item.image }} style={styles.image} />
+      <Image source={{ uri: item.images[0]?.url || item.images[0]?.uri }} style={styles.image} />
       <Text numberOfLines={1} style={styles.title}>{item.title}</Text>
       <Text style={styles.price}>{item.price}</Text>
-      <Text style={styles.location}>{item.location}</Text>
+      <Text numberOfLines={1} style={styles.location}>{item.location}</Text>
 
       <TouchableOpacity
         style={styles.sellerInfo}
-        onPress={() => navigation.navigate('SellerProfile', { userId: item.seller.id })}
+        onPress={() => navigation.navigate('SellerProfile', { userId: item.seller._id })}
       >
         <Image source={{ uri: item.seller.avatar }} style={styles.avatar} />
-        <Text style={styles.sellerName}>{item.seller.name}</Text>
+        <Text numberOfLines={1} style={styles.sellerName}>{item.seller.name || item.seller.username}</Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.wrapper}>
-      <View style={styles.topBarContainer}>
-        <View style={styles.topBar}>
-          <TextInput
-            placeholder="Search marketplace..."
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            style={styles.searchInput}
-          />
-          <TouchableOpacity
-            onPress={() => navigation.navigate('PostNewItem')}
-            style={styles.postButton}
-          >
-            <Text style={styles.postButtonText}>+ Post</Text>
-          </TouchableOpacity>
-          <View style={styles.profileDropdownWrapper}>
+      <View style={styles.headerBar}>
+        <View style={styles.headerContent}>
+          <Text style={styles.heading}>🛍️ Bazar</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() => dispatch({ type: GLOBALTYPES.STATUS, payload: { type: 'bazar' } })}
+              style={styles.iconButton}
+            >
+              <MaterialIcons name="add-box" size={26} color="#000" />
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowDropdown(!showDropdown)}>
               <Image
                 source={{ uri: auth.user.avatar || 'https://randomuser.me/api/portraits/men/10.jpg' }}
@@ -148,36 +105,33 @@ const BazarScreen = () => {
             </TouchableOpacity>
           </View>
         )}
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar}>
+          {categories.map(cat => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.filterChip, selectedCategory === cat && styles.activeFilter]}
+              onPress={() => setSelectedCategory(cat)}
+            >
+              <Text style={[styles.filterText, selectedCategory === cat && styles.activeFilterText]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar}>
-        {categories.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.filterButton,
-              selectedCategory === cat && styles.activeFilterButton,
-            ]}
-            onPress={() => setSelectedCategory(cat)}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                selectedCategory === cat && styles.activeFilterText,
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <TextInput
+        placeholder="Search marketplace..."
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+        style={styles.searchInput}
+      />
 
-      {/* Items */}
       <FlatList
         data={filteredItems}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item._id || item.id}
         numColumns={2}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -193,37 +147,47 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  topBarContainer: {
-    position: 'relative',
-    zIndex: 999,
+
+  headerBar: {
+    paddingTop: 20,
+    paddingBottom: 14,
     backgroundColor: '#fff',
+    borderBottomColor: '#e0e0e0',
+    borderBottomWidth: 1,
   },
-  topBar: {
+
+  headerContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
     flexDirection: 'row',
-    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1d3557',
+  },
+
+  headerActions: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  searchInput: {
-    flex: 1,
-    backgroundColor: '#f1f1f1',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginRight: 10,
-  },
+
   postButton: {
     backgroundColor: '#007AFF',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    marginRight: 10,
   },
+
   postButtonText: {
     color: '#fff',
     fontWeight: '600',
   },
-  profileDropdownWrapper: {
-    marginLeft: 10,
-  },
+
   profileAvatar: {
     width: 36,
     height: 36,
@@ -231,7 +195,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
   },
+
   dropdown: {
+    position: 'absolute',
+    top: 70,
+    right: 10,
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    paddingVertical: 6,
+    width: 160,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -246,47 +218,68 @@ const styles = StyleSheet.create({
         boxShadow: '0px 2px 6px rgba(0,0,0,0.1)',
       },
     }),
-    position: 'absolute',
-    top: 58,
-    right: 10,
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    paddingVertical: 6,
-    width: 160,
   },
+
   dropdownItem: {
     padding: 10,
   },
+
   dropdownText: {
     fontSize: 14,
     color: '#333',
   },
+
   filterBar: {
-    paddingHorizontal: 10,
-    paddingBottom: 8,
-    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 16,
+    paddingTop: 4,
   },
-  filterButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    marginRight: 10,
+
+  filterChip: {
     borderRadius: 20,
-    backgroundColor: '#eee',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#e5e5e5',
+    marginRight: 10,
+    elevation: Platform.OS === 'android' ? 1 : 0,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 1 },
+        shadowRadius: 2,
+      },
+      web: {
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      },
+    }),
   },
-  activeFilterButton: {
+
+  activeFilter: {
     backgroundColor: '#007AFF',
   },
+
   filterText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#444',
+    fontWeight: '500',
   },
+
   activeFilterText: {
     color: '#fff',
-    fontWeight: '600',
   },
+
+  searchInput: {
+    margin: 16,
+    backgroundColor: '#f1f1f1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+
   list: {
     padding: 10,
   },
+
   item: {
     flex: 1,
     margin: 5,
@@ -295,38 +288,47 @@ const styles = StyleSheet.create({
     padding: 10,
     elevation: 2,
     alignItems: 'center',
+    height: 260,
+    overflow: 'hidden',
   },
+
   image: {
     width: '100%',
     height: 120,
     borderRadius: 10,
     marginBottom: 8,
   },
+
   title: {
     fontSize: 14,
     fontWeight: '600',
   },
+
   price: {
     fontSize: 15,
     color: '#007AFF',
     fontWeight: 'bold',
     marginTop: 4,
   },
+
   location: {
     fontSize: 12,
     color: '#666',
   },
+
   sellerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
   },
+
   avatar: {
     width: 24,
     height: 24,
     borderRadius: 12,
     marginRight: 6,
   },
+
   sellerName: {
     fontSize: 13,
     color: '#333',
